@@ -122,11 +122,25 @@ class HusiScraperAgent:
     def obtener_citas_activas(self):
         if not self.token:
             return []
-        url = f"{self.config.base_url}/api/appointment"
+        # Parámetros oficiales del portal web de HUSI para traer ÚNICAMENTE citas vigentes activas
+        # Evita cualquier cita cancelada o histórica y salta cualquier caché intermedio
+        now_ts = int(datetime.now().timestamp() * 1000)
+        params = {
+            "getActiveStates": "true",
+            "isSequential": "true",
+            "includeBlockDates": "true",
+            "size": "50",
+            "onlyMain": "true",
+            "_t": str(now_ts)
+        }
+        url = f"{self.config.base_url}/api/appointment?{urllib.parse.urlencode(params)}"
         req = urllib.request.Request(
             url,
             headers={
                 "Authorization": f"Bearer {self.token}",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HUSI-Agent/2.0"
             }
         )
@@ -136,6 +150,10 @@ class HusiScraperAgent:
                 raw_citas = data.get("data", [])
                 citas = []
                 for c in raw_citas:
+                    # Filtro de seguridad adicional: Descartar si el estado es 'C' (Cancelado) o tiene cancelCode
+                    if c.get("appointmentState") == "C" or c.get("cancelCode"):
+                        continue
+
                     if not self.patient_name and c.get("patient"):
                         self.patient_name = c.get("patient")
                     if not self.patient_id and c.get("patientID"):
@@ -178,15 +196,19 @@ class HusiScraperAgent:
         appt_id = cita.get("appointmentID")
         attention_type_id = cita.get("attentionTypeID", 1)
 
+        now_ts = int(datetime.now().timestamp() * 1000)
         url = (
             f"{self.config.base_url}/paciente/scheduleavailability/get?"
             f"available=true&serviceID={service_id}&planID={plan_id}&specialtyID={specialty_id}&"
-            f"attentionTypeID={attention_type_id}&excludeAppointmentID={appt_id}"
+            f"attentionTypeID={attention_type_id}&excludeAppointmentID={appt_id}&_t={now_ts}"
         )
         req = urllib.request.Request(
             url,
             headers={
                 "Authorization": f"Bearer {self.token}",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HUSI-Agent/2.0"
             }
         )
