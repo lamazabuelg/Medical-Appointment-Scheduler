@@ -724,6 +724,7 @@ def imprimir_reporte_consola(res):
 def main():
     parser = argparse.ArgumentParser(description="Bot Multiagente Autónomo HUSI - Cobertura Multi-Citas")
     parser.add_argument("--mode", type=str, default="reschedule", choices=["reschedule", "monitor", "dry-run"], help="Modo de ejecución")
+    parser.add_argument("--duration-hours", type=float, default=3.0, help="Duración máxima de la sesión continua en horas (ej. 3.0)")
     parser.add_argument("--summary", action="store_true", help="Imprimir resumen visual en consola")
     parser.add_argument("--daemon", action="store_true", help="Ejecutar en bucle continuo de sondeo según POLLING_INTERVAL_MINUTES")
     parser.add_argument("--interval", type=int, help="Intervalo de sondeo en minutos")
@@ -744,7 +745,7 @@ def main():
         sys.exit(1)
 
     if not args.daemon:
-        # Modo de pase único (para la API o GitHub Actions)
+        # Modo de pase único (para la API o GitHub Actions individual)
         resultado = ejecutar_sondeo(config)
 
         # Si corre en GitHub Actions, escribir reporte Markdown en GITHUB_STEP_SUMMARY
@@ -763,40 +764,48 @@ def main():
         # Siempre imprimir el JSON para consumidores como server.ts
         print(json.dumps(resultado, indent=2, ensure_ascii=False))
     else:
-        # Modo Bucle Continuo (Daemon)
+        # Modo Bucle Continuo (Daemon) por bloques de tiempo (ej. 3 horas continuas)
         interval_secs = config.polling_interval_minutes * 60
-        print(f"=== Iniciando Modo Vigilancia Recurrente HUSI cada {config.polling_interval_minutes} minutos ===")
-        print(f"• URL: {config.base_url}")
-        print(f"• Paciente: C.C. {config.doc_num}")
-        print(f"• Filtros: Horario={config.preferred_time} | Doctor={config.preferred_doctor} | Modalidad={config.modality}")
-        print("Presiona Ctrl+C para detener.\n")
+        duration_hours = args.duration_hours
+        start_time = datetime.now()
+        end_time = start_time + timedelta(hours=duration_hours)
+
+        print("=" * 80, flush=True)
+        print("🏥 INICIANDO SESIÓN CONTINUA DE VIGILANCIA HUSI", flush=True)
+        print("=" * 80, flush=True)
+        print(f"• Frecuencia: Cada {config.polling_interval_minutes} minutos exactos", flush=True)
+        print(f"• Duración de la sesión: {duration_hours} horas (hasta {end_time.strftime('%Y-%m-%d %H:%M:%S')})", flush=True)
+        print(f"• Portal URL: {config.base_url}", flush=True)
+        print(f"• Paciente: C.C. {config.doc_num}", flush=True)
+        print(f"• Criterios: Horario={config.preferred_time} | Doctor={config.preferred_doctor} | Modalidad={config.modality}", flush=True)
+        print("=" * 80 + "\n", flush=True)
 
         iteracion = 1
-        while True:
+        while datetime.now() < end_time:
             ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"[{ahora}] [Iteración {iteracion}] Consultando portal HUSI para todas las citas activas...")
+            print(f"[{ahora}] [Iteración {iteracion}] Consultando portal HUSI para todas las citas activas...", flush=True)
             resultado = ejecutar_sondeo(config)
 
-            if resultado.get("success"):
-                total_citas = resultado.get("total_appointments_tracked", 0)
-                total_cupos = resultado.get("slots_found_real_count", 0)
-                print(f"  ➜ Total Citas Monitoreadas: {total_citas}")
-                print(f"  ➜ Total Cupos encontrados en HUSI: {total_cupos}")
+            # Actualizar reporte Markdown en vivo para GitHub Actions Summary
+            step_summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+            if step_summary_file:
+                try:
+                    with open(step_summary_file, "w", encoding="utf-8") as f:
+                        f.write(generar_reporte_markdown(resultado) + f"\n\n*Sesión en vivo iniciada a las {start_time.strftime('%H:%M:%S')}. Último chequeo: {ahora} (Iteración {iteracion})*\n")
+                except Exception:
+                    pass
 
-                for appt in resultado.get("appointments_evaluated", []):
-                    spec = appt.get("specialty")
-                    serv = appt.get("service")
-                    val = appt.get("validation", {})
-                    slots_cnt = appt.get("slots_found_count", 0)
-                    print(f"    • [{spec} - {serv} ({appt.get('date')})]: {slots_cnt} cupos | Decisión: {val.get('decision')}")
+            imprimir_reporte_consola(resultado)
 
-                if resultado.get("rescheduled"):
-                    print("  🎉 ¡CITA REPROGRAMADA EXITOSAMENTE! Notificación enviada.")
-                    break
-            else:
-                print(f"  ✗ Error en sondeo: {resultado.get('error')}")
+            if resultado.get("rescheduled"):
+                print("🎉 ¡CITA REPROGRAMADA EXITOSAMENTE! Alerta real enviada.", flush=True)
 
-            print(f"  ⏳ Esperando {config.polling_interval_minutes} minutos para el próximo chequeo...\n")
+            remaining_secs = (end_time - datetime.now()).total_seconds()
+            if remaining_secs <= interval_secs:
+                print(f"\n⏱️ Sesión continua de {duration_hours} horas finalizada con éxito.", flush=True)
+                break
+
+            print(f"⏳ Esperando exactamente {config.polling_interval_minutes} minutos para la siguiente verificación... (Restan {int(remaining_secs / 60)} min en esta sesión)\n", flush=True)
             iteracion += 1
             time.sleep(interval_secs)
 
