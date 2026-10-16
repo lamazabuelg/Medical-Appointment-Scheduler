@@ -1,5 +1,7 @@
 # 🏥 HUSI Medical Appointment Monitor & Auto-Rescheduler
 
+[![HUSI Continuous Monitor](https://github.com/lamazabuelg/Medical-Appointment-Scheduler/actions/workflows/husi-monitor.yml/badge.svg)](https://github.com/lamazabuelg/Medical-Appointment-Scheduler/actions/workflows/husi-monitor.yml)
+
 Sistema multiagente autónomo en **Python** para el monitoreo continuo y la reprogramación automática de citas médicas en el portal oficial del **Hospital Universitario San Ignacio** ([agendatucita.husi.org.co](https://agendatucita.husi.org.co)).
 
 ---
@@ -33,6 +35,7 @@ Tanto para ejecución local como en GitHub Actions, el bot se parametriza median
 | `SMTP_USER` | No | Correo emisor SMTP (ej. cuenta de Gmail) | *(Tu correo)* |
 | `SMTP_PASS` | No | Contraseña de aplicación para envío SMTP | *(Contraseña App)* |
 | `NTFY_TOPIC` | No | Canal de alertas push gratuitas para celular / web | `husi-citas-alertas` |
+| `GH_PAT` *(Opcional)* | No | Token de GitHub con permiso `workflow` para auto-reenganche perpetuo inmediato | *(Opcional)* |
 
 ---
 
@@ -50,27 +53,21 @@ python3 husi_agent_engine.py --daemon --duration-hours 3.0 --interval 5
 
 ---
 
-## ☁️ Ejecución Automática Gratuita en GitHub Actions
+## ☁️ Ejecución Automática en GitHub Actions
 
-El repositorio incluye el workflow configurado en `.github/workflows/husi-monitor.yml`:
+El workflow en `.github/workflows/husi-monitor.yml` está diseñado para correr ininterrumpidamente:
 
-### 1. ¿Cómo funciona?
-* Se ejecuta automáticamente en bloques programados cada 3 horas (`cron: '0 */3 * * *'`).
-* Cada sesión mantiene la máquina virtual activa durante **3 horas**, ejecutando un chequeo en vivo en HUSI **cada 5 minutos exactos**.
-* Al ser un repositorio **Público**, GitHub otorga minutos **ilimitados y 100% gratuitos**.
+### 1. ¿Cómo se asegura la ejecución cada 3 horas?
+1. **Cron Nativo Programado:** GitHub Actions tiene configurado `cron: '0 */3 * * *'`, lo que encola una nueva sesión de 3 horas automáticamente a las `00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC`.
+2. **Auto-Reenganche Inmediato (Opcional):** Si configuras en tus Secrets un Personal Access Token (`GH_PAT`) con permiso de `workflow`, el paso final del workflow disparará la siguiente sesión en el segundo 0 al terminar las 3 horas.
+3. **Insignia en Vivo:** El badge superior de este README te muestra en tiempo real si el bot está ejecutándose (`passing` en verde).
 
-### 2. Configurar los Secretos en GitHub
-1. En tu repositorio en GitHub, ve a **Settings** > **Secrets and variables** > **Actions**.
-2. Haz clic en **New repository secret**.
-3. Agrega tus credenciales (`HUSI_DOC_NUM`, `HUSI_PASSWORD`, `NOTIFICATION_EMAIL`, etc.).
-4. **Seguridad Garantizada:** GitHub almacena los secretos encriptados con Libsodium; nunca son visibles en el código ni en los logs.
-
-### 3. Iniciar una Sesión Manualmente
+### 2. Iniciar una Sesión Manualmente
 1. Entra a la pestaña **Actions** de tu repositorio.
-2. Selecciona **HUSI Continuous Appointment Monitor (3-Hour Live Sessions)** en la barra lateral.
+2. Selecciona **HUSI Continuous Appointment Monitor (3-Hour Live Sessions)**.
 3. Haz clic en **Run workflow** > **Run workflow**.
 
-### 4. ¿Dónde ver los resultados?
+### 3. ¿Dónde ver los resultados?
 * **En el log en vivo:** Haz clic en el paso `> Ejecutar motor continuo cada 5 minutos` para ver la consola en tiempo real iteración por iteración.
 * **En el Resumen Visual:** Haz clic en **🏠 Summary** (en el menú lateral de la ejecución) para ver la tabla Markdown formateada con el estado de cada cita médica agendada y los cupos disponibles en el hospital.
 

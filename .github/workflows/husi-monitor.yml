@@ -10,6 +10,10 @@ concurrency:
   group: husi-continuous-worker
   cancel-in-progress: false
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   run-surveillance-session:
     name: Sesión Continua HUSI (3 Horas / Cada 5 min)
@@ -49,3 +53,17 @@ jobs:
           echo "Iniciando sesión continua de vigilancia de 3 horas..."
           echo "El motor consultará HUSI en vivo exactamente cada 5 minutos."
           python3 husi_agent_engine.py --daemon --duration-hours 3.0 --interval 5
+
+      - name: Auto-Reenganche de la Siguiente Sesión (Garantía 24/7)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Verificando auto-reenganche continuo para la siguiente sesión..."
+          if [ -n "${{ secrets.GH_PAT }}" ]; then
+            echo "Secret GH_PAT detectado. Disparando de inmediato la siguiente sesión continua de 3 horas..."
+            gh workflow run husi-monitor.yml --ref main || true
+          else
+            echo "Sesión completada. La siguiente sesión se disparará automáticamente vía schedule de GitHub Actions (cron: 0 */3 * * *)."
+          fi
+
