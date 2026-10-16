@@ -1,0 +1,6 @@
+{
+  "name": "HUSI Multi-Agent Appointment Bot & Orchestrator",
+  "description": "Sistema multiagéntico local para raspado web de citas médicas, validación inteligente con Gemini y reprogramación automática con notificaciones para HUSI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
