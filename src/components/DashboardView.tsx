@@ -217,9 +217,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </h3>
           </div>
           <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
-            <span>Paciente: <strong>LUIS ÁNGEL MAZABUEL GARCÍA</strong></span>
-            <span className="text-slate-300">·</span>
-            <span>C.C. 1233895427</span>
+            {status.lastResult?.patient ? (
+              <span>Paciente: <strong>{status.lastResult.patient}</strong></span>
+            ) : (
+              <span>Monitoreo Activo de Citas</span>
+            )}
           </div>
         </div>
 

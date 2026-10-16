@@ -176,7 +176,7 @@ async function runProbeOnce(triggerType: "auto" | "manual" = "manual"): Promise<
 
         // REGLA ESTRICTA: Notificación ÚNICAMENTE si hay reprogramación efectiva en alguna de las citas
         if (isRescheduled) {
-          const recipientEmail = process.env.NOTIFICATION_EMAIL || "lamazabuelg@gmail.com";
+          const recipientEmail = process.env.NOTIFICATION_EMAIL || "";
           const notifications = readJsonFile<any[]>(NOTIFICATIONS_FILE, []);
 
           // Alertar para cada cita que haya sido reprogramada
@@ -369,7 +369,7 @@ app.get("/api/agent/config", (req, res) => {
     maxDate: process.env.FECHA_MAXIMA || "",
     pollingIntervalMinutes: parseInt(process.env.POLLING_INTERVAL_MINUTES || "5", 10),
     notificationChannel: process.env.NOTIFICATION_CHANNEL || "email",
-    notificationEmail: process.env.NOTIFICATION_EMAIL || "lamazabuelg@gmail.com",
+    notificationEmail: process.env.NOTIFICATION_EMAIL || "",
     ntfyTopic: process.env.NTFY_TOPIC || "husi-citas-alertas",
   });
 });

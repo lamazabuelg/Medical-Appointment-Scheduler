@@ -1,0 +1,51 @@
+name: HUSI Appointment Poller & Auto-Rescheduler
+
+on:
+  schedule:
+    # Se ejecuta cada 5 minutos de forma ininterrumpida
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente en cualquier momento desde la pestaña "Actions"
+
+# Evita que se solapen dos ejecuciones al mismo tiempo
+concurrency:
+  group: husi-sondeo-runner
+  cancel-in-progress: false
+
+jobs:
+  check-and-reschedule:
+    name: Sondeo y Reprogramación Inteligente HUSI
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: ''
+
+      - name: Ejecutar motor multiagente HUSI
+        env:
+          HUSI_BASE_URL: ${{ secrets.HUSI_BASE_URL || 'https://agendatucita.husi.org.co' }}
+          HUSI_TIPO_DOC: ${{ secrets.HUSI_TIPO_DOC || '1' }}
+          HUSI_DOC_NUM: ${{ secrets.HUSI_DOC_NUM }}
+          HUSI_PASSWORD: ${{ secrets.HUSI_PASSWORD }}
+          PREFERENCIA_HORARIO: ${{ secrets.PREFERENCIA_HORARIO || 'any' }}
+          PREFERENCIA_DOCTOR: ${{ secrets.PREFERENCIA_DOCTOR || 'any' }}
+          MODALIDAD: ${{ secrets.MODALIDAD || 'presencial' }}
+          MIN_DAYS_EARLIER: ${{ secrets.MIN_DAYS_EARLIER || '1' }}
+          FECHA_MAXIMA: ${{ secrets.FECHA_MAXIMA || '' }}
+          NOTIFICATION_CHANNEL: ${{ secrets.NOTIFICATION_CHANNEL || 'email' }}
+          NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC || 'husi-citas-alertas' }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "Iniciando sondeo multiagente para todas las citas activas..."
+          python3 husi_agent_engine.py --mode reschedule

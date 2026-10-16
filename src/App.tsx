@@ -31,50 +31,7 @@ export default function App() {
   const [isRunningNow, setIsRunningNow] = useState(false);
   
   // Lista oficial de citas programadas en la cuenta HUSI del paciente
-  const [trackedAppointments, setTrackedAppointments] = useState<any[]>([
-    {
-      appointmentID: 1052295,
-      code: "QABKKZY8",
-      doctor: "JAVIER ALEXANDER BECERRA MATEUS",
-      doctorID: 501,
-      service: "Oftalmologia General Primera Vez",
-      serviceID: 358,
-      specialty: "Oftalmología",
-      specialtyID: 348,
-      date: "2026-11-30",
-      time: "08:00",
-      location: "Unidad Oftalmología Consultorio 311",
-      status: "PROGRAMADA",
-    },
-    {
-      appointmentID: 1047239,
-      code: "O4OQUIDN",
-      doctor: "FREDY ALEXANDER AVILA ALMANZA",
-      doctorID: 423,
-      service: "Gastro Adulto Control",
-      serviceID: 243,
-      specialty: "Gastroenterología",
-      specialtyID: 417,
-      date: "2026-11-30",
-      time: "14:05",
-      location: "Consultorio 17 Edif Parqueaderos",
-      status: "PROGRAMADA",
-    },
-    {
-      appointmentID: 1020351,
-      code: "QCI3HOR7",
-      doctor: "ALEXANDER CASTAÑEDA LADINO",
-      doctorID: 50,
-      service: "Gastro Adulto Primera vez",
-      serviceID: 434,
-      specialty: "Gastroenterología",
-      specialtyID: 417,
-      date: "2027-01-13",
-      time: "14:20",
-      location: "Consultorio 24 Edif Parqueaderos",
-      status: "PROGRAMADA",
-    },
-  ]);
+  const [trackedAppointments, setTrackedAppointments] = useState<any[]>([]);
 
   // Cargar datos del backend
   const fetchData = async () => {
@@ -223,7 +180,7 @@ export default function App() {
           <NotificationsView
             notifications={notifications}
             onMarkAllRead={handleMarkAllRead}
-            targetEmail={preferences.notificationEmail || "lamazabuelg@gmail.com"}
+            targetEmail={preferences.notificationEmail || "No configurado"}
           />
         )}
 

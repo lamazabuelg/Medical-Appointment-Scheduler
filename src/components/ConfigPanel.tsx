@@ -201,7 +201,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   setFormData({ ...formData, docNumber: e.target.value })
                 }
                 className="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:bg-white focus:outline-blue-600"
-                placeholder="1233895427"
+                placeholder="1000000000"
                 required
               />
             </div>
@@ -212,13 +212,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               Contraseña de Acceso
             </label>
             <input
-              type="text"
+              type="password"
               value={formData.password}
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
               className="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:bg-white focus:outline-blue-600"
-              placeholder="Mazabuel98"
+              placeholder="••••••••"
               required
             />
             <span className="text-[10px] text-slate-500 mt-1 block">
@@ -422,7 +422,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   setFormData({ ...formData, notificationEmail: e.target.value })
                 }
                 className="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:bg-white"
-                placeholder="lamazabuelg@gmail.com"
+                placeholder="ejemplo@correo.com"
               />
               <span className="text-[10px] text-slate-500 mt-1 block">
                 Solo se enviará correo cuando una cita sea reprogramada exitosamente.

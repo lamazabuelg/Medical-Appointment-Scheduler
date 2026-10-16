@@ -70,7 +70,7 @@ class HusiConfig:
 
         # Notificaciones
         self.notification_channel = os.environ.get("NOTIFICATION_CHANNEL", "email")
-        self.notification_email = os.environ.get("NOTIFICATION_EMAIL", "lamazabuelg@gmail.com")
+        self.notification_email = os.environ.get("NOTIFICATION_EMAIL", "")
         self.ntfy_topic = os.environ.get("NTFY_TOPIC", "husi-citas-alertas")
         self.telegram_bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
         self.telegram_chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -409,7 +409,35 @@ class HusiNotifierAgent:
             f"https://agendatucita.husi.org.co/paciente"
         )
         
-        # ntfy.sh push alert (gratuita e inmediata a celular y navegador)
+        # 1. Enviar correo electrónico real via SMTP si hay credenciales configuradas
+        smtp_user = os.environ.get("SMTP_USER") or os.environ.get("EMAIL_USER")
+        smtp_pass = os.environ.get("SMTP_PASS") or os.environ.get("EMAIL_PASS") or os.environ.get("EMAIL_APP_PASSWORD")
+        smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+        smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+        email_sent = False
+        
+        if smtp_user and smtp_pass and self.config.notification_email:
+            try:
+                import smtplib
+                from email.mime.multipart import MIMEMultipart
+                from email.mime.text import MIMEText
+                msg = MIMEMultipart()
+                msg['From'] = f"HUSI Bot <{smtp_user}>"
+                msg['To'] = self.config.notification_email
+                msg['Subject'] = titulo
+                msg.attach(MIMEText(mensaje, 'plain', 'utf-8'))
+                
+                server = smtplib.SMTP(smtp_host, smtp_port, timeout=12)
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+                server.quit()
+                email_sent = True
+                print(f"[Notifier] Correo SMTP enviado exitosamente a {self.config.notification_email}")
+            except Exception as e:
+                print(f"[Notifier] Advertencia: Error enviando correo SMTP: {e}", file=sys.stderr)
+
+        # 2. ntfy.sh push alert (gratuita e inmediata a celular y navegador)
         try:
             req = urllib.request.Request(
                 f"https://ntfy.sh/{self.config.ntfy_topic}",
@@ -426,6 +454,7 @@ class HusiNotifierAgent:
 
         return {
             "sent": True,
+            "email_sent": email_sent,
             "recipient": self.config.notification_email,
             "timestamp": datetime.now().isoformat(),
             "specialty": cita_antigua.get("specialty"),
@@ -568,6 +597,7 @@ def ejecutar_sondeo(config: HusiConfig):
 
 def main():
     parser = argparse.ArgumentParser(description="Bot Multiagente Autónomo HUSI - Cobertura Multi-Citas")
+    parser.add_argument("--mode", type=str, default="reschedule", choices=["reschedule", "monitor", "dry-run"], help="Modo de ejecución")
     parser.add_argument("--daemon", action="store_true", help="Ejecutar en bucle continuo de sondeo según POLLING_INTERVAL_MINUTES")
     parser.add_argument("--interval", type=int, help="Intervalo de sondeo en minutos")
     parser.add_argument("--time", type=str, choices=["morning", "afternoon", "any"], help="Preferencia de horario")

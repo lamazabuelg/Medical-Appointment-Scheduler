@@ -1,8 +1,33 @@
+# Dependencies
 node_modules/
-build/
+package-lock.json
+bun.lock
+
+# Build outputs
 dist/
+build/
 coverage/
-.DS_Store
-*.log
-.env*
+
+# Environment and sensitive keys
+.env
+.env.*
+.env.local
 !.env.example
+
+# Local runtime data (Contains medical records, execution traces, personal notifications)
+/data/
+*.json.bak
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+.aistudio/

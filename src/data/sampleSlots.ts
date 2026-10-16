@@ -1,12 +1,12 @@
 import { Appointment, CandidateSlot, UserPreferences } from "../types/agent";
 
 export const initialAppointment: Appointment = {
-  id: "1047239",
-  specialty: "Gastroenterología (Gastro Adulto Control)",
-  doctor: "Dr. FREDY ALEXANDER AVILA ALMANZA",
-  date: "2026-11-30",
-  time: "14:05",
-  location: "Hospital Universitario San Ignacio - Consultorio 17 Edif Parqueaderos",
+  id: "1000000",
+  specialty: "Consulta Médica Especializada",
+  doctor: "Profesional Médico Asignado",
+  date: "2026-12-15",
+  time: "08:00",
+  location: "Hospital Universitario San Ignacio",
   status: "PROGRAMADA",
 };
 
@@ -15,8 +15,8 @@ export const sampleCandidateSlots: CandidateSlot[] = [];
 export const defaultPreferences: UserPreferences = {
   husiBaseUrl: "https://agendatucita.husi.org.co",
   docType: "1",
-  docNumber: "1233895427",
-  password: "••••••••",
+  docNumber: "",
+  password: "",
   preferredTimeSlot: "any", // "Cualquier Horario" por defecto
   preferredDoctor: "any", // "Cualquier Profesional" por defecto
   modality: "presencial", // Presencial en HUSI
@@ -25,7 +25,7 @@ export const defaultPreferences: UserPreferences = {
   specialty: "Todas las Especialidades Mapeadas",
   pollingIntervalMinutes: 5,
   notificationChannel: "email",
-  notificationEmail: "lamazabuelg@gmail.com",
+  notificationEmail: "",
   telegramChatId: "",
   telegramBotToken: "",
   ntfyTopic: "husi-citas-alertas",
