@@ -48,4 +48,4 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           echo "Iniciando sondeo multiagente para todas las citas activas..."
-          python3 husi_agent_engine.py --mode reschedule
+          python3 husi_agent_engine.py --mode reschedule --summary

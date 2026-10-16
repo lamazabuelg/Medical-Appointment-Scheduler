@@ -33,14 +33,58 @@ Este workflow:
 
 ---
 
-## 3. Paso a Paso para Activar en GitHub
+## 3. ¿Cómo cambiar el repositorio de Privado a Público en GitHub?
+
+En tu captura de pantalla se observa el candado 🔒 junto a `lamazabuelg / Medical-Appointment-Scheduler`, indicando que está en Privado. Para cambiarlo a Público y tener minutos ilimitados:
+
+1. En la barra superior de tu repositorio, haz clic en la pestaña **Settings** (es la última pestaña a la derecha, al lado de *Insights*).
+2. En la página general de configuración, baja hasta el final del todo hasta la sección roja llamada **Danger Zone**.
+3. En la primera opción, haz clic en el botón **Change visibility** (o **Change repository visibility**).
+4. Selecciona **Make public**.
+5. Te pedirá confirmar escribiendo el nombre de tu repositorio: `lamazabuelg/Medical-Appointment-Scheduler`.
+6. Haz clic en **I understand, make this repository public**. ¡Listo! Ahora el repositorio es público y GitHub Actions no te cobrará ningún minuto.
+
+---
+
+## 4. ¿Dónde ver el resumen de citas evaluadas en cada ejecución?
+
+Tienes **dos lugares directos** dentro de la pestaña **Actions**:
+
+### A. En la pestaña "Summary" de la ejecución (Tabla Visual Formateada)
+1. En la pantalla donde estás ahora (ver tu captura), en el menú de la izquierda haz clic en **🏠 Summary** (arriba de *All jobs*).
+2. GitHub mostrará inmediatamente una **tabla formateada con insignias y estados** que detalla:
+   - Paciente y documento.
+   - Cada una de tus citas agendadas (Oftalmología, Gastroenterología Control, Gastroenterología Primera Vez).
+   - Cuántos cupos encontró en el portal HUSI para cada una.
+   - Diagnóstico (si no hay cupos o si los existentes son más lejanos que tu cita actual).
+   - Si se logró una reprogramación efectiva al adelantar días.
+
+### B. En el log del paso "Ejecutar motor multiagente HUSI"
+1. En la vista de jobs, haz clic en el paso: **`> Ejecutar motor multiagente HUSI`**.
+2. El paso se desplegará mostrando la consola en texto plano con el banner:
+   ```text
+   🏥 HUSI MULTI-AGENT APPOINTMENT MONITOR - RESUMEN DE EJECUCIÓN
+   ================================================================================
+   👤 Paciente: ... | Cédula: CC ...
+   📊 Citas en Monitoreo: 3 | Cupos Detectados en HUSI: 48
+   --------------------------------------------------------------------------------
+   1. [Oftalmología] Oftalmologia General Primera Vez
+      • Cita Actual: 2026-11-30 08:00
+      • Cupos en Portal HUSI: 48 cupo(s) encontrado(s)
+      • Diagnóstico: Los cupos existentes son para diciembre de 2026. Tu cita ya es la más cercana.
+   ...
+   ```
+
+---
+
+## 5. Paso a Paso para Activar en GitHub
 
 ### Paso 1: Subir el proyecto a tu GitHub
 ```bash
 git init
 git add .
 git commit -m "feat: Bot multiagente HUSI con GitHub Actions"
-git remote add origin https://github.com/TU_USUARIO/TU_REPOSITORIO.git
+git remote add origin https://github.com/lamazabuelg/Medical-Appointment-Scheduler.git
 git branch -M main
 git push -u origin main
 ```

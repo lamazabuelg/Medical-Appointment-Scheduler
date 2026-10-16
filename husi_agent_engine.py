@@ -595,9 +595,114 @@ def ejecutar_sondeo(config: HusiConfig):
         "execution": primary_eval.get("execution")
     }
 
+def generar_reporte_markdown(res):
+    """Genera reporte enriquecido en Markdown para GitHub Actions Step Summary."""
+    if not res.get("success"):
+        return f"### ❌ Error en el Sondeo HUSI\n\n**Detalle:** {res.get('error', 'Error desconocido')}"
+    
+    patient = res.get("patient", "Paciente HUSI")
+    timestamp = res.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    total_citas = res.get("total_appointments_tracked", 0)
+    total_cupos = res.get("slots_found_real_count", 0)
+    rescheduled = res.get("rescheduled", False)
+
+    status_badge = "🎉 **¡CITA REPROGRAMADA EXITOSAMENTE!**" if rescheduled else "✅ **Sondeo Completado (Citas vigentes preservadas)**"
+
+    md = []
+    md.append("## 🏥 Reporte de Monitoreo de Citas Médicas - HUSI\n")
+    md.append(f"{status_badge}\n")
+    md.append(f"- **Paciente:** `{patient}`")
+    md.append(f"- **Fecha y Hora del Sondeo:** `{timestamp}`")
+    md.append(f"- **Total de Citas en Monitoreo:** `{total_citas}`")
+    md.append(f"- **Cupos Disponibles Detectados en HUSI:** `{total_cupos}`\n")
+    
+    md.append("### 📋 Resumen por Cita Médica Agendada\n")
+    md.append("| Especialidad | Servicio | Cita Actual Agendada | Cupos en HUSI | Diagnóstico y Acción | Adelanto |")
+    md.append("| :--- | :--- | :--- | :---: | :--- | :---: |")
+
+    for appt in res.get("appointments_evaluated", []):
+        spec = appt.get("specialty", "N/A")
+        serv = appt.get("service", "N/A")
+        fecha_act = f"{appt.get('date')} {appt.get('time')}"
+        doc_act = appt.get("doctor", "N/A")
+        slots_count = appt.get("slots_found_count", 0)
+        val = appt.get("validation", {})
+        is_reprog = appt.get("rescheduled", False)
+
+        if is_reprog:
+            slot = val.get("selected_slot", {})
+            decision_str = f"🚀 **REPROGRAMADA AL {slot.get('date')} {slot.get('time')}** con {slot.get('doctor')}"
+            adelanto = f"**+{slot.get('daysEarlier', 0)} días**"
+        elif slots_count > 0:
+            decision_str = "🔍 Cupos detectados pero no adelantan tu cita o no cumplen filtros"
+            adelanto = "0 d"
+        else:
+            decision_str = "⏳ Sin cupos más cercanos en HUSI por ahora"
+            adelanto = "-"
+
+        md.append(f"| **{spec}** | {serv} | `{fecha_act}`<br>*{doc_act}* | **{slots_count}** | {decision_str} | {adelanto} |")
+
+    md.append("\n### ⚙️ Criterios de Evaluación Configurados\n")
+    crit = res.get("criteria", {})
+    md.append(f"- **Franja Horaria:** `{crit.get('preferred_time', 'any')}`")
+    md.append(f"- **Preferencia Doctor:** `{crit.get('preferred_doctor', 'any')}`")
+    md.append(f"- **Modalidad:** `{crit.get('modality', 'presencial')}`")
+    md.append(f"- **Mínimo de Adelanto Exigido:** `{crit.get('min_days_earlier', 1)} día(s)`")
+    md.append(f"- **Fecha Límite Máxima:** `{crit.get('max_date') or 'Sin restricción'}`\n")
+
+    md.append("> 🔔 **Nota:** Este bot se ejecuta automáticamente cada 5 minutos. Solo recibirás correo electrónico si ocurre una **reprogramación efectiva**.")
+    return "\n".join(md)
+
+def imprimir_reporte_consola(res):
+    """Imprime un resumen visual legible para la consola de GitHub Actions o terminal."""
+    if not res.get("success"):
+        print(f"\n❌ ERROR EN SONDEO: {res.get('error')}\n", file=sys.stderr)
+        return
+
+    print("\n" + "=" * 80)
+    print("🏥 HUSI MULTI-AGENT APPOINTMENT MONITOR - RESUMEN DE EJECUCIÓN")
+    print("=" * 80)
+    print(f"👤 Paciente: {res.get('patient')} | Cédula: CC {res.get('doc_number')}")
+    print(f"⏱️ Fecha/Hora: {res.get('timestamp')}")
+    print(f"📊 Citas en Monitoreo: {res.get('total_appointments_tracked', 0)} | Cupos Detectados en HUSI: {res.get('slots_found_real_count', 0)}")
+    print("-" * 80)
+    print("DETALLE POR CITA AGENDADA:")
+
+    for i, appt in enumerate(res.get("appointments_evaluated", []), 1):
+        spec = appt.get("specialty")
+        serv = appt.get("service")
+        fecha = f"{appt.get('date')} {appt.get('time')}"
+        doc = appt.get("doctor")
+        slots = appt.get("slots_found_count", 0)
+        val = appt.get("validation", {})
+        reprog = appt.get("rescheduled", False)
+
+        print(f"\n{i}. [{spec}] {serv}")
+        print(f"   • Cita Actual: {fecha} ({doc})")
+        print(f"   • Cupos en Portal HUSI: {slots} cupo(s) encontrado(s)")
+        if reprog:
+            slot = val.get("selected_slot", {})
+            print(f"   • 🚀 ¡REPROGRAMACIÓN EXITOSA!: Nueva fecha {slot.get('date')} {slot.get('time')} ({slot.get('doctor')}) | Adelantada {slot.get('daysEarlier')} días")
+        elif slots > 0:
+            print(f"   • Diagnóstico: Los cupos existentes no adelantan tu cita o no cumplen tus criterios.")
+            print(f"   • Decisión: PRESERVAR CITA ACTUAL (Se mantiene tu fecha)")
+        else:
+            print(f"   • Diagnóstico: No hay cupos disponibles en este momento.")
+            print(f"   • Decisión: SIN CUPOS (Continuar monitoreo cada 5 minutos)")
+
+    print("-" * 80)
+    crit = res.get("criteria", {})
+    print(f"⚙️ Criterios: Horario={crit.get('preferred_time')} | Doctor={crit.get('preferred_doctor')} | Modalidad={crit.get('modality')}")
+    if res.get("rescheduled"):
+        print("🎉 ESTADO FINAL: ¡REPROGRAMACIÓN CONFIRMADA! Notificación enviada.")
+    else:
+        print("✅ ESTADO FINAL: Sondeo exitoso. Citas vigentes preservadas (Sin cambios necesarios).")
+    print("=" * 80 + "\n")
+
 def main():
     parser = argparse.ArgumentParser(description="Bot Multiagente Autónomo HUSI - Cobertura Multi-Citas")
     parser.add_argument("--mode", type=str, default="reschedule", choices=["reschedule", "monitor", "dry-run"], help="Modo de ejecución")
+    parser.add_argument("--summary", action="store_true", help="Imprimir resumen visual en consola")
     parser.add_argument("--daemon", action="store_true", help="Ejecutar en bucle continuo de sondeo según POLLING_INTERVAL_MINUTES")
     parser.add_argument("--interval", type=int, help="Intervalo de sondeo en minutos")
     parser.add_argument("--time", type=str, choices=["morning", "afternoon", "any"], help="Preferencia de horario")
@@ -617,8 +722,23 @@ def main():
         sys.exit(1)
 
     if not args.daemon:
-        # Modo de pase único (para la API o terminal)
+        # Modo de pase único (para la API o GitHub Actions)
         resultado = ejecutar_sondeo(config)
+
+        # Si corre en GitHub Actions, escribir reporte Markdown en GITHUB_STEP_SUMMARY
+        step_summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+        if step_summary_file:
+            try:
+                with open(step_summary_file, "a", encoding="utf-8") as f:
+                    f.write(generar_reporte_markdown(resultado) + "\n")
+            except Exception as e:
+                print(f"[Aviso] No se pudo escribir en GITHUB_STEP_SUMMARY: {e}", file=sys.stderr)
+
+        # Si se solicita resumen o si corre en GitHub Actions, imprimir tabla en consola
+        if args.summary or os.environ.get("GITHUB_ACTIONS"):
+            imprimir_reporte_consola(resultado)
+
+        # Siempre imprimir el JSON para consumidores como server.ts
         print(json.dumps(resultado, indent=2, ensure_ascii=False))
     else:
         # Modo Bucle Continuo (Daemon)
