@@ -1,3 +1,4 @@
+
 # 🏥 HUSI Medical Appointment Monitor & Auto-Rescheduler
 
 [![HUSI Continuous Monitor](https://github.com/lamazabuelg/Medical-Appointment-Scheduler/actions/workflows/husi-monitor.yml/badge.svg)](https://github.com/lamazabuelg/Medical-Appointment-Scheduler/actions/workflows/husi-monitor.yml)
@@ -8,9 +9,8 @@ Sistema multiagente autónomo en **Python** para el monitoreo continuo y la repr
 
 ## 📺 Demostración en Video del Sistema
 
-<video src="demo corto.mov" controls="controls" style="max-width: 100%;">
-  Tu navegador no soporta la reproducción de video. Puedes ver o descargar el video directamente desde el repositorio.
-</video>
+
+https://github.com/user-attachments/assets/e771ef44-2300-4509-b9d0-64fc712c8d5f
 
 > 💡 *Video demostrativo de 4m 40s mostrando el sondeo multiagente en vivo, la detección de cupos y la reprogramación automática en HUSI.*
 ---
