@@ -6,6 +6,15 @@ Sistema multiagente autónomo en **Python** para el monitoreo continuo y la repr
 
 ---
 
+## 📺 Demostración en Video del Sistema
+
+<video src="demo corto.mov" controls="controls" style="max-width: 100%;">
+  Tu navegador no soporta la reproducción de video. Puedes ver o descargar el video directamente desde el repositorio.
+</video>
+
+> 💡 *Video demostrativo de 4m 40s mostrando el sondeo multiagente en vivo, la detección de cupos y la reprogramación automática en HUSI.*
+---
+
 ## 🚀 Características Principales
 
 * **Motor 100% Python Nativo:** Todo el scraping, autenticación, consulta de disponibilidad, evaluación de criterios y confirmación de reprogramación está escrito en un único script autónomo (`husi_agent_engine.py`) utilizando únicamente la biblioteca estándar de Python (sin dependencias complejas).
